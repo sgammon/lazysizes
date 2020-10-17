@@ -1,115 +1,96 @@
-(function(window, factory) {
-	var globalInstall = function(){
-		factory(window.lazySizes);
-		window.removeEventListener('lazyunveilread', globalInstall, true);
+
+goog.module('third_party.lazysizes.nativeLoading');
+const lazySizes = goog.require('third_party.lazysizes');
+
+
+var imgSupport = 'loading' in HTMLImageElement.prototype;
+var iframeSupport = 'loading' in HTMLIFrameElement.prototype;
+var isConfigSet = false;
+var oldPrematureUnveil = lazySizes.prematureUnveil;
+var cfg = lazySizes.cfg();
+var listenerMap = {
+	focus: 1,
+	mouseover: 1,
+	click: 1,
+	load: 1,
+	transitionend: 1,
+	animationend: 1,
+	scroll: 1,
+	resize: 1,
+};
+
+if (!cfg.nativeLoading) {
+	cfg.nativeLoading = {};
+}
+
+function disableEvents() {
+	var cfg = lazySizes.cfg();
+	var loader = lazySizes.loader;
+	var throttledCheckElements = loader.checkElems;
+	var removeALSL = function(){
+		setTimeout(function(){
+			window.removeEventListener('scroll', loader._aLSL, true);
+		}, 1000);
 	};
+	var currentListenerMap = typeof cfg.nativeLoading.disableListeners == 'object' ?
+		cfg.nativeLoading.disableListeners :
+		listenerMap;
 
-	factory = factory.bind(null, window, window.document);
+	if (currentListenerMap.scroll) {
+		window.addEventListener('load', removeALSL);
+		removeALSL();
 
-	if(typeof module == 'object' && module.exports){
-		factory(require('lazysizes'));
-	} else if (typeof define == 'function' && define.amd) {
-		define(['lazysizes'], factory);
-	} else if(window.lazySizes) {
-		globalInstall();
-	} else {
-		window.addEventListener('lazyunveilread', globalInstall, true);
-	}
-}(window, function(window, document, lazySizes) {
-	'use strict';
-
-	var imgSupport = 'loading' in HTMLImageElement.prototype;
-	var iframeSupport = 'loading' in HTMLIFrameElement.prototype;
-	var isConfigSet = false;
-	var oldPrematureUnveil = lazySizes.prematureUnveil;
-	var cfg = lazySizes.cfg;
-	var listenerMap = {
-		focus: 1,
-		mouseover: 1,
-		click: 1,
-		load: 1,
-		transitionend: 1,
-		animationend: 1,
-		scroll: 1,
-		resize: 1,
-	};
-
-	if (!cfg.nativeLoading) {
-		cfg.nativeLoading = {};
+		window.removeEventListener('scroll', throttledCheckElements, true);
 	}
 
-	if (!window.addEventListener || !window.MutationObserver || (!imgSupport && !iframeSupport)) {
-		return;
+	if (currentListenerMap.resize) {
+		window.removeEventListener('resize', throttledCheckElements, true);
 	}
 
-	function disableEvents() {
-		var loader = lazySizes.loader;
-		var throttledCheckElements = loader.checkElems;
-		var removeALSL = function(){
-			setTimeout(function(){
-				window.removeEventListener('scroll', loader._aLSL, true);
-			}, 1000);
-		};
-		var currentListenerMap = typeof cfg.nativeLoading.disableListeners == 'object' ?
-			cfg.nativeLoading.disableListeners :
-			listenerMap;
+	Object.keys(currentListenerMap).forEach(function(name) {
+		if (currentListenerMap[name]) {
+			document.removeEventListener(name, throttledCheckElements, true);
+		}
+	});
+}
 
-		if (currentListenerMap.scroll) {
-			window.addEventListener('load', removeALSL);
-			removeALSL();
+function runConfig() {
+	var cfg = lazySizes.cfg();
+	if (isConfigSet) {return;}
+	isConfigSet = true;
 
-			window.removeEventListener('scroll', throttledCheckElements, true);
+	if (imgSupport && iframeSupport && cfg.nativeLoading.disableListeners) {
+		if (cfg.nativeLoading.disableListeners === true) {
+			cfg.nativeLoading.setLoadingAttribute = true;
 		}
 
-		if (currentListenerMap.resize) {
-			window.removeEventListener('resize', throttledCheckElements, true);
-		}
+		disableEvents();
+	}
 
-		Object.keys(currentListenerMap).forEach(function(name) {
-			if (currentListenerMap[name]) {
-				document.removeEventListener(name, throttledCheckElements, true);
+	if (cfg.nativeLoading.setLoadingAttribute) {
+		window.addEventListener('lazybeforeunveil', function(e){
+			var element = e.target;
+
+			if ('loading' in element && !element.getAttribute('loading')) {
+				element.setAttribute('loading', 'lazy');
 			}
-		});
+		}, true);
+	}
+}
+
+lazySizes.prematureUnveil = function prematureUnveil(element) {
+	var cfg = lazySizes.cfg();
+	if (!isConfigSet) {
+		runConfig();
 	}
 
-	function runConfig() {
-		if (isConfigSet) {return;}
-		isConfigSet = true;
-
-		if (imgSupport && iframeSupport && cfg.nativeLoading.disableListeners) {
-			if (cfg.nativeLoading.disableListeners === true) {
-				cfg.nativeLoading.setLoadingAttribute = true;
-			}
-
-			disableEvents();
-		}
-
-		if (cfg.nativeLoading.setLoadingAttribute) {
-			window.addEventListener('lazybeforeunveil', function(e){
-				var element = e.target;
-
-				if ('loading' in element && !element.getAttribute('loading')) {
-					element.setAttribute('loading', 'lazy');
-				}
-			}, true);
-		}
+	if ('loading' in element &&
+		(cfg.nativeLoading.setLoadingAttribute || element.getAttribute('loading')) &&
+		(element.getAttribute('data-sizes') != 'auto' || element.offsetWidth)) {
+		return true;
 	}
 
-	lazySizes.prematureUnveil = function prematureUnveil(element) {
-
-		if (!isConfigSet) {
-			runConfig();
-		}
-
-		if ('loading' in element &&
-			(cfg.nativeLoading.setLoadingAttribute || element.getAttribute('loading')) &&
-			(element.getAttribute('data-sizes') != 'auto' || element.offsetWidth)) {
-			return true;
-		}
-
-		if (oldPrematureUnveil) {
-			return oldPrematureUnveil(element);
-		}
-	};
-
-}));
+	if (oldPrematureUnveil) {
+		return oldPrematureUnveil(element);
+	}
+};

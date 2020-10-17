@@ -1,89 +1,77 @@
-(function(window, factory) {
-	if(!window) {return;}
-	var globalInstall = function(){
-		factory(window.lazySizes);
-		window.removeEventListener('lazyunveilread', globalInstall, true);
-	};
 
-	factory = factory.bind(null, window, window.document);
+goog.module('third_party.lazysizes.respImg');
+const lazySizes = goog.require('third_party.lazysizes');
 
-	if(typeof module == 'object' && module.exports){
-		factory(require('lazysizes'));
-	} else if (typeof define == 'function' && define.amd) {
-		define(['lazysizes'], factory);
-	} else if(window.lazySizes) {
-		globalInstall();
-	} else {
-		window.addEventListener('lazyunveilread', globalInstall, true);
-	}
-}(typeof window != 'undefined' ?
-	window : 0, function(window, document, lazySizes) {
-	/*jshint eqnull:true */
-	'use strict';
-	var polyfill;
-	var lazySizesCfg = lazySizes.cfg;
-	var img = document.createElement('img');
-	var supportSrcset = ('sizes' in img) && ('srcset' in img);
-	var regHDesc = /\s+\d+h/g;
-	var fixEdgeHDescriptor = (function(){
-		var regDescriptors = /\s+(\d+)(w|h)\s+(\d+)(w|h)/;
-		var forEach = Array.prototype.forEach;
 
-		return function(){
-			var img = document.createElement('img');
-			var removeHDescriptors = function(source){
-				var ratio, match;
-				var srcset = source.getAttribute(lazySizesCfg.srcsetAttr);
-				if(srcset){
-					if((match = srcset.match(regDescriptors))){
-						if(match[2] == 'w'){
-							ratio = match[1] / match[3];
-						} else {
-							ratio = match[3] / match[1];
-						}
+var polyfill;
+var lazySizesCfg = lazySizes.cfg();
+var img = document.createElement('img');
+var supportSrcset = ('sizes' in img) && ('srcset' in img);
+var regHDesc = /\s+\d+h/g;
+var fixEdgeHDescriptor = (function(){
+	var regDescriptors = /\s+(\d+)(w|h)\s+(\d+)(w|h)/;
+	var forEach = Array.prototype.forEach;
 
-						if(ratio){
-							source.setAttribute('data-aspectratio', ratio);
-						}
-						source.setAttribute(lazySizesCfg.srcsetAttr, srcset.replace(regHDesc, ''));
+	return function(){
+		var img = document.createElement('img');
+		var removeHDescriptors = function(source){
+			var ratio, match;
+			var srcset = source.getAttribute(lazySizesCfg.srcsetAttr);
+			if(srcset){
+				if((match = srcset.match(regDescriptors))){
+					if(match[2] == 'w'){
+						ratio = match[1] / match[3];
+					} else {
+						ratio = match[3] / match[1];
 					}
+
+					if(ratio){
+						source.setAttribute('data-aspectratio', ratio);
+					}
+					source.setAttribute(lazySizesCfg.srcsetAttr, srcset.replace(regHDesc, ''));
 				}
-			};
-			var handler = function(e){
-				if(e.detail.instance != lazySizes){return;}
-				var picture = e.target.parentNode;
-
-				if(picture && picture.nodeName == 'PICTURE'){
-					forEach.call(picture.getElementsByTagName('source'), removeHDescriptors);
-				}
-				removeHDescriptors(e.target);
-			};
-
-			var test = function(){
-				if(!!img.currentSrc){
-					document.removeEventListener('lazybeforeunveil', handler);
-				}
-			};
-
-			document.addEventListener('lazybeforeunveil', handler);
-
-			img.onload = test;
-			img.onerror = test;
-
-			img.srcset = 'data:,a 1w 1h';
-
-			if(img.complete){
-				test();
 			}
 		};
-	})();
+		var handler = function(e){
+			if(e.detail.instance != lazySizes){return;}
+			var picture = e.target.parentNode;
 
-	if(!lazySizesCfg.supportsType){
-		lazySizesCfg.supportsType = function(type/*, elem*/){
-			return !type;
+			if(picture && picture.nodeName == 'PICTURE'){
+				forEach.call(picture.getElementsByTagName('source'), removeHDescriptors);
+			}
+			removeHDescriptors(e.target);
 		};
-	}
 
+		var test = function(){
+			if(!!img.currentSrc){
+				document.removeEventListener('lazybeforeunveil', handler);
+			}
+		};
+
+		document.addEventListener('lazybeforeunveil', handler);
+
+		img.onload = test;
+		img.onerror = test;
+
+		img.srcset = 'data:,a 1w 1h';
+
+		if(img.complete){
+			test();
+		}
+	};
+})();
+
+if(!lazySizesCfg.supportsType){
+	lazySizesCfg.supportsType = function(type/*, elem*/){
+		return !type;
+	};
+}
+
+
+/**
+ * Initialize responsive images support.
+ */
+function init() {
 	if (window.HTMLPictureElement && supportSrcset) {
 		if(!lazySizes.hasHDescriptorFix && document.msElementsFromPoint){
 			lazySizes.hasHDescriptorFix = true;
@@ -308,4 +296,6 @@
 		})();
 
 	}
-}));
+}
+
+init();

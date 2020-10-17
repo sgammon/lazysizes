@@ -4,7 +4,6 @@ goog.module('third_party.lazysizes');
 let lazysizes, lazySizesCfg;
 
 
-
 /**
  *
  * @public
@@ -36,26 +35,26 @@ let LazySizesConfig;
 	var prop;
 
 	var lazySizesDefaults = {
-		'lazyClass': 'lazyload',
-		'loadedClass': 'lazyloaded',
-		'loadingClass': 'lazyloading',
-		'preloadClass': 'lazypreload',
-		'errorClass': 'lazyerror',
+		lazyClass: 'lazyload',
+		loadedClass: 'lazyloaded',
+		loadingClass: 'lazyloading',
+		preloadClass: 'lazypreload',
+		errorClass: 'lazyerror',
 		//strictClass: 'lazystrict',
-		'autosizesClass': 'lazyautosizes',
-		'srcAttr': 'data-src',
-		'srcsetAttr': 'data-srcset',
-		'sizesAttr': 'data-sizes',
+		autosizesClass: 'lazyautosizes',
+		srcAttr: 'data-src',
+		srcsetAttr: 'data-srcset',
+		sizesAttr: 'data-sizes',
 		//preloadAfterLoad: false,
-		'minSize': 40,
-		'customMedia': {},
-		'init': true,
-		'expFactor': 1.5,
-		'hFac': 0.8,
-		'loadMode': 2,
-		'loadHidden': true,
-		'ricTimeout': 0,
-		'throttleDelay': 125,
+		minSize: 40,
+		customMedia: {},
+		init: true,
+		expFactor: 1.5,
+		hFac: 0.8,
+		loadMode: 2,
+		loadHidden: true,
+		ricTimeout: 0,
+		throttleDelay: 125,
 	};
 
 	lazySizesCfg = window.lazySizesConfig || window.lazysizesConfig || {};
@@ -762,7 +761,17 @@ function boot(config) {
 exports.boot = boot;
 
 
-lazysizes = {
+/**
+ * Access to the Lazysizes Config.
+ *
+ * @return {!LazySizesConfig} Configuration for the library.
+ */
+function config() {
+	return lazySizesCfg;
+}
+
+
+lazysizes = window['lazySizes'] = {
 	'cfg': lazySizesCfg,
 	'autoSizer': autoSizer,
 	'loader': loader,
@@ -776,6 +785,7 @@ lazysizes = {
 	'rAF': rAF,
 };
 
+exports.cfg = config;
 exports.lazysizes = lazysizes;
 exports.lazySizesCfg = lazySizesCfg;
 exports.LazySizesConfig = LazySizesConfig;

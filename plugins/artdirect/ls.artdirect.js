@@ -1,176 +1,157 @@
-(function(window, factory) {
-	if (!window) {return;}
-	var globalInstall = function(){
-		factory(window.lazySizes);
-		window.removeEventListener('lazyunveilread', globalInstall, true);
-	};
 
-	factory = factory.bind(null, window, window.document);
-
-	if(typeof module == 'object' && module.exports){
-		factory(require('lazysizes'));
-	} else if (typeof define == 'function' && define.amd) {
-		define(['lazysizes'], factory);
-	} else if(window.lazySizes) {
-		globalInstall();
-	} else {
-		window.addEventListener('lazyunveilread', globalInstall, true);
-	}
-}(typeof window != 'undefined' ?
-	window : 0, function(window, document, lazySizes) {
-	'use strict';
-
-	if(!window.addEventListener){return;}
-	var lazySizesConfig = lazySizes.cfg;
-
-	var  ElementPrototype = (window.Element || Node || window.HTMLElement).prototype;
-	var regArtDirect = /artdirect/;
-	var regDescriptors = /\s+(\d+)(w|h)\s+(\d+)(w|h)/;
-	var regArtDirectTags = /artdirect["']*\s*:\s*["']*(.+?)(?=($|'|"|;))/;
-	var regPicture = /^picture$/i;
-	var regSplit = /[\s,]+/g;
-	var slice = [].slice;
-
-	function getCandidatesAspectRatio(element){
-		var match, width, height;
-		var ratio = parseFloat(element.getAttribute('data-aspectratio'));
-		var srcset = element.getAttribute(lazySizesConfig.srcsetAttr) || element.getAttribute('srcset');
+goog.module('third_party.lazysizes.artdirect');
+const lazySizes = goog.require('third_party.lazysizes');
 
 
-		if(!ratio){
-			match = srcset.match(regDescriptors);
+var lazySizesConfig = lazySizes.cfg;
 
-			if (match) {
-				if(match[2] == 'w'){
-					width = match[1];
-					height = match[3];
-				} else {
-					width = match[3];
-					height = match[1];
-				}
+var  ElementPrototype = (window.Element || Node || window.HTMLElement).prototype;
+var regArtDirect = /artdirect/;
+var regDescriptors = /\s+(\d+)(w|h)\s+(\d+)(w|h)/;
+var regArtDirectTags = /artdirect["']*\s*:\s*["']*(.+?)(?=($|'|"|;))/;
+var regPicture = /^picture$/i;
+var regSplit = /[\s,]+/g;
+var slice = [].slice;
+
+function getCandidatesAspectRatio(element){
+	var match, width, height;
+	var ratio = parseFloat(element.getAttribute('data-aspectratio'));
+	var srcset = element.getAttribute(lazySizesConfig.srcsetAttr) || element.getAttribute('srcset');
+
+
+	if(!ratio){
+		match = srcset.match(regDescriptors);
+
+		if (match) {
+			if(match[2] == 'w'){
+				width = match[1];
+				height = match[3];
 			} else {
-				width = element.getAttribute('width');
-				height = element.getAttribute('height');
+				width = match[3];
+				height = match[1];
 			}
-
-			ratio = width / height;
+		} else {
+			width = element.getAttribute('width');
+			height = element.getAttribute('height');
 		}
 
-		return ratio;
+		ratio = width / height;
 	}
 
-	function getLayoutAspectRatio(element){
-		return element.offsetWidth / element.offsetHeight;
-	}
+	return ratio;
+}
 
-	function toTagSelector(tag){
-		return 'source[data-tag~="' + tag + '"]';
-	}
+function getLayoutAspectRatio(element){
+	return element.offsetWidth / element.offsetHeight;
+}
 
-	function getArtDirectConfig(img){
-		var picture = img.parentNode;
-		var isPicture = regPicture.test(picture.nodeName || '');
-		var content = (window.getComputedStyle(img) || {}).fontFamily;
-		var config = null;
+function toTagSelector(tag){
+	return 'source[data-tag~="' + tag + '"]';
+}
 
-		if(isPicture && (lazySizesConfig.autoArtDirect || regArtDirect.test(content || ''))){
-			config = {
-				picture: picture,
-				img: img,
-				tags: content.match(regArtDirectTags)
-			};
+function getArtDirectConfig(img){
+	var picture = img.parentNode;
+	var isPicture = regPicture.test(picture.nodeName || '');
+	var content = (window.getComputedStyle(img) || {}).fontFamily;
+	var config = null;
 
-			if(config.tags){
-				config.selector = config.tags[1].split(regSplit).map(toTagSelector).join(',');
-			}
-		}
-
-		return config;
-	}
-
-	function toSourceObj(source){
-		var media = source.getAttribute('media');
-
-		return {
-			source: source,
-			aspectRatio: getCandidatesAspectRatio(source),
-			isSelected: !media || window.matchMedia(media).matches,
+	if(isPicture && (lazySizesConfig.autoArtDirect || regArtDirect.test(content || ''))){
+		config = {
+			picture: picture,
+			img: img,
+			tags: content.match(regArtDirectTags)
 		};
-	}
 
-	function sortAspectRatio(source1, source2){
-		return source1.aspectRatio < source2.aspectRatio;
-	}
-
-	function getClosestSource(sources, aspecRatio){
-		var i, len;
-		var closest = sources[0];
-
-		for(i = 1, len = sources.length; i < len; i++){
-			if(Math.abs(closest.aspectRatio - aspecRatio) > Math.abs(sources[i].aspectRatio - aspecRatio)){
-				closest = sources[i];
-			}
+		if(config.tags){
+			config.selector = config.tags[1].split(regSplit).map(toTagSelector).join(',');
 		}
-
-		return closest;
 	}
 
-	function setMedia(source, media){
-		source._lsMedia = media;
-		lazySizes.rAF(function(){
-			if(source._lsMedia){
-				delete source._lsMedia;
-			}
-			source.setAttribute('media', media);
-		});
-	}
+	return config;
+}
 
-	function selectSource(imgCfg){
-		var imgAspectRatio = getLayoutAspectRatio(imgCfg.img);
-		var sources = slice.call(imgCfg.picture.getElementsByTagName('source'))
-			.map(toSourceObj)
-			.sort(sortAspectRatio)
-		;
-		var matchedSources = imgCfg.selector ?
-			sources.filter(function(source){
-				return source.source.matches(imgCfg.selector);
-			}) :
-			sources
-		;
-		var closestSource = getClosestSource(matchedSources, imgAspectRatio);
+function toSourceObj(source){
+	var media = source.getAttribute('media');
 
-		if(!closestSource.isSelected){
-			setMedia(closestSource.source, '(min-width: 1px)');
+	return {
+		source: source,
+		aspectRatio: getCandidatesAspectRatio(source),
+		isSelected: !media || window.matchMedia(media).matches,
+	};
+}
+
+function sortAspectRatio(source1, source2){
+	return source1.aspectRatio < source2.aspectRatio;
+}
+
+function getClosestSource(sources, aspecRatio){
+	var i, len;
+	var closest = sources[0];
+
+	for(i = 1, len = sources.length; i < len; i++){
+		if(Math.abs(closest.aspectRatio - aspecRatio) > Math.abs(sources[i].aspectRatio - aspecRatio)){
+			closest = sources[i];
 		}
+	}
 
+	return closest;
+}
+
+function setMedia(source, media){
+	source._lsMedia = media;
+	lazySizes.rAF(function(){
+		if(source._lsMedia){
+			delete source._lsMedia;
+		}
+		source.setAttribute('media', media);
+	});
+}
+
+function selectSource(imgCfg){
+	var imgAspectRatio = getLayoutAspectRatio(imgCfg.img);
+	var sources = slice.call(imgCfg.picture.getElementsByTagName('source'))
+		.map(toSourceObj)
+		.sort(sortAspectRatio)
+	;
+	var matchedSources = imgCfg.selector ?
+		sources.filter(function(source){
+			return source.source.matches(imgCfg.selector);
+		}) :
 		sources
-			.filter(function(source){
-				return (source != closestSource && source.isSelected);
-			})
-			.forEach(function (source) {
-				setMedia(source.source, '(x)');
-			})
-		;
+	;
+	var closestSource = getClosestSource(matchedSources, imgAspectRatio);
+
+	if(!closestSource.isSelected){
+		setMedia(closestSource.source, '(min-width: 1px)');
 	}
 
-	function addAutoArtDirection(e){
+	sources
+		.filter(function(source){
+			return (source != closestSource && source.isSelected);
+		})
+		.forEach(function (source) {
+			setMedia(source.source, '(x)');
+		})
+	;
+}
 
-		if(e.detail.instance != lazySizes){return;}
+function addAutoArtDirection(e){
 
-		var img = e.target;
-		var imgCfg = getArtDirectConfig(img);
+	if(e.detail.instance != lazySizes){return;}
 
-		if(imgCfg){
-			selectSource(imgCfg);
-		}
+	var img = e.target;
+	var imgCfg = getArtDirectConfig(img);
+
+	if(imgCfg){
+		selectSource(imgCfg);
 	}
+}
 
-	if(!ElementPrototype.matches){
-		ElementPrototype.matches = ElementPrototype.matchesSelector ||
-			ElementPrototype.webkitMatchesSelector ||
-			ElementPrototype.msMatchesSelector ||
-			ElementPrototype.oMatchesSelector;
-	}
+if(!ElementPrototype.matches){
+	ElementPrototype.matches = ElementPrototype.matchesSelector ||
+		ElementPrototype.webkitMatchesSelector ||
+		ElementPrototype.msMatchesSelector ||
+		ElementPrototype.oMatchesSelector;
+}
 
-	window.addEventListener('lazybeforesizes', addAutoArtDirection, true);
-}));
+window.addEventListener('lazybeforesizes', addAutoArtDirection, true);
