@@ -1,7 +1,36 @@
 
 goog.module('third_party.lazysizes');
 
-var lazysizes, lazySizesCfg;
+let lazysizes, lazySizesCfg;
+
+
+
+/**
+ *
+ * @public
+ * @typedef {{
+ *   lazyClass: !string,
+ *   loadedClass: !string,
+ *   loadingClass: !string,
+ *   preloadClass: !string,
+ *   errorClass: !string,
+ *   autosizesClass: !string,
+ *   srcAttr: !string,
+ *   srcsetAttr: !string,
+ *   sizesAttr: !string,
+ *   minSize: !number,
+ *   customMedia: !Object<!string, !string|!number>,
+ *   init: !boolean,
+ *   expFactor: !number,
+ *   hFac: !number,
+ *   loadMode: !number,
+ *   loadHidden: !boolean,
+ *   ricTimeout: !number,
+ *   throttleDelay: 125	
+ * }}
+ */
+let LazySizesConfig;
+
 
 (function(){
 	var prop;
@@ -729,7 +758,7 @@ function boot() {
 exports.boot = boot;
 
 
-lazysizes = {
+const lazysizes = {
 	'cfg': lazySizesCfg,
 	'autoSizer': autoSizer,
 	'loader': loader,
@@ -744,3 +773,5 @@ lazysizes = {
 };
 
 exports.lazysizes = lazysizes;
+exports.lazysizesCfg = lazysizesCfg;
+exports.LazySizesConfig = LazySizesConfig;
