@@ -729,7 +729,7 @@ function boot() {
 exports.boot = boot;
 
 
-const lazysizes = {
+lazysizes = {
 	'cfg': lazySizesCfg,
 	'autoSizer': autoSizer,
 	'loader': loader,
