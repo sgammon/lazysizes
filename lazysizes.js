@@ -729,18 +729,18 @@ function boot() {
 exports.boot = boot;
 
 
-lazysizes = {
-	cfg: lazySizesCfg,
-	autoSizer: autoSizer,
-	loader: loader,
-	init: init,
-	uP: updatePolyfill,
-	aC: addClass,
-	rC: removeClass,
-	hC: hasClass,
-	fire: triggerEvent,
-	gW: getWidth,
-	rAF: rAF,
+const lazysizes = {
+	'cfg': lazySizesCfg,
+	'autoSizer': autoSizer,
+	'loader': loader,
+	'init': init,
+	'uP': updatePolyfill,
+	'aC': addClass,
+	'rC': removeClass,
+	'hC': hasClass,
+	'fire': triggerEvent,
+	'gW': getWidth,
+	'rAF': rAF,
 };
 
 exports.lazysizes = lazysizes;
