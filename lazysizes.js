@@ -26,7 +26,7 @@ let lazysizes, lazySizesCfg;
  *   loadMode: !number,
  *   loadHidden: !boolean,
  *   ricTimeout: !number,
- *   throttleDelay: 125	
+ *   throttleDelay: !number
  * }}
  */
 let LazySizesConfig;
