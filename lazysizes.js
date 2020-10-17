@@ -746,8 +746,12 @@ var init = function(){
 
 /**
  * Boot the library.
+ *
+ * @param {!LazySizesConfig} config Library configuration to apply.
  */
-function boot() {
+function boot(config) {
+	lazySizesCfg = config;
+
 	setTimeout(function(){
 		if(lazySizesCfg.init){
 			init();
