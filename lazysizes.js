@@ -38,13 +38,6 @@ var lazysizes, lazySizesCfg;
 	}
 })();
 
-if (!document || !document.getElementsByClassName) {
-	return {
-		init: function () {},
-		cfg: lazySizesCfg,
-		noSupport: true,
-	};
-}
 
 var docElem = document.documentElement;
 
