@@ -773,5 +773,5 @@ lazysizes = {
 };
 
 exports.lazysizes = lazysizes;
-exports.lazysizesCfg = lazysizesCfg;
+exports.lazySizesCfg = lazySizesCfg;
 exports.LazySizesConfig = LazySizesConfig;
